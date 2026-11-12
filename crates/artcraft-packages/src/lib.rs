@@ -65,7 +65,10 @@ impl PackageManager for AptManager {
             can_install: true,
             can_remove: true,
             requires_privileges: true,
-            supported_methods: vec![InstallationMethod::AptRepository, InstallationMethod::DebianPackage],
+            supported_methods: vec![
+                InstallationMethod::AptRepository,
+                InstallationMethod::DebianPackage,
+            ],
         }
     }
     fn discover(&self, _apps: &[Application]) -> Result<Vec<Installation>, PackageError> {
@@ -124,7 +127,10 @@ impl PackageManager for FlatpakManager {
             can_install: true,
             can_remove: true,
             requires_privileges: false,
-            supported_methods: vec![InstallationMethod::FlatpakUser, InstallationMethod::FlatpakSystem],
+            supported_methods: vec![
+                InstallationMethod::FlatpakUser,
+                InstallationMethod::FlatpakSystem,
+            ],
         }
     }
     fn discover(&self, _apps: &[Application]) -> Result<Vec<Installation>, PackageError> {
@@ -195,9 +201,13 @@ impl PackageManager for AppImageManager {
         Err(PackageError::Unsupported(app.id.to_string()))
     }
     fn plan_install(&self, _c: &PackageCandidate) -> Result<InstallPlan, PackageError> {
-        Err(PackageError::Unsupported("appimage install not planned".into()))
+        Err(PackageError::Unsupported(
+            "appimage install not planned".into(),
+        ))
     }
     fn plan_remove(&self, _i: &Installation) -> Result<RemovePlan, PackageError> {
-        Err(PackageError::Unsupported("appimage remove not planned".into()))
+        Err(PackageError::Unsupported(
+            "appimage remove not planned".into(),
+        ))
     }
 }

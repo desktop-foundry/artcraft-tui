@@ -1,5 +1,5 @@
 use artcraft_events::DomainEvent;
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use std::sync::Mutex;
 use thiserror::Error;
 

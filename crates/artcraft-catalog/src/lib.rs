@@ -70,10 +70,18 @@ pub fn load_str(src: &str) -> Result<Vec<Application>, String> {
             description: a.description,
             publisher: a.publisher,
             official_repository: a.official_repository,
-            supported_platforms: a.supported_platforms.iter().map(|s| parse_platform(s)).collect(),
+            supported_platforms: a
+                .supported_platforms
+                .iter()
+                .map(|s| parse_platform(s))
+                .collect(),
             supported_arches: a.supported_arches.iter().map(|s| parse_arch(s)).collect(),
             known_package_ids: a.known_package_ids,
-            known_data_locations: a.known_data_locations.iter().map(|s| expand_path(s)).collect(),
+            known_data_locations: a
+                .known_data_locations
+                .iter()
+                .map(|s| expand_path(s))
+                .collect(),
             executable_names: a.executable_names,
             desktop_ids: a.desktop_ids,
             catalog_source: CatalogSource::Bundled,

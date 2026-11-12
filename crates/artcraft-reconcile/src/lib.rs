@@ -25,11 +25,12 @@ pub fn build_plan(
             continue;
         }
         // group by method
-        let preferred_present = insts
+        let preferred_present = insts.iter().any(|i| i.method == desired.preferred_method);
+        let nonpreferred: Vec<&Installation> = insts
             .iter()
-            .any(|i| i.method == desired.preferred_method);
-        let nonpreferred: Vec<&Installation> =
-            insts.iter().filter(|i| i.method != desired.preferred_method).copied().collect();
+            .filter(|i| i.method != desired.preferred_method)
+            .copied()
+            .collect();
         if insts.len() > 1 {
             counter += 1;
             ops.push(ReconciliationOperation {

@@ -25,11 +25,13 @@ fn parse_arch(s: &str) -> CpuArch {
 }
 
 fn app_for_package<'a>(apps: &'a [Application], pkg: &str) -> Option<&'a Application> {
-    apps.iter().find(|a| a.known_package_ids.iter().any(|p| p == pkg))
+    apps.iter()
+        .find(|a| a.known_package_ids.iter().any(|p| p == pkg))
 }
 
 fn app_for_flatpak<'a>(apps: &'a [Application], fid: &str) -> Option<&'a Application> {
-    apps.iter().find(|a| a.known_package_ids.iter().any(|p| p == fid))
+    apps.iter()
+        .find(|a| a.known_package_ids.iter().any(|p| p == fid))
 }
 
 pub fn discover_all(apps: &[Application]) -> Vec<Installation> {
@@ -85,7 +87,11 @@ fn discover_flatpak(apps: &[Application], out: &mut Vec<Installation>) {
     // flatpak list --app --columns=application,version,installation
     let text = match cmd_output(
         "flatpak",
-        &["list", "--app", "--columns=application,version,installation"],
+        &[
+            "list",
+            "--app",
+            "--columns=application,version,installation",
+        ],
     ) {
         Some(t) => t,
         None => return,
@@ -97,8 +103,14 @@ fn discover_flatpak(apps: &[Application], out: &mut Vec<Installation>) {
         }
         let fid = cols[0].trim();
         if let Some(app) = app_for_flatpak(apps, fid) {
-            let version = cols.get(1).map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
-            let install = cols.get(2).map(|s| s.trim().to_lowercase()).unwrap_or_default();
+            let version = cols
+                .get(1)
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty());
+            let install = cols
+                .get(2)
+                .map(|s| s.trim().to_lowercase())
+                .unwrap_or_default();
             let (method, scope) = if install.contains("system") {
                 (InstallationMethod::FlatpakSystem, InstallationScope::System)
             } else {
@@ -150,7 +162,11 @@ fn discover_appimages(apps: &[Application], out: &mut Vec<Installation>) {
                     .executable_names
                     .iter()
                     .any(|n| lower.contains(&n.to_lowercase()))
-                    || app.display_name.to_lowercase().split_whitespace().any(|w| lower.contains(w));
+                    || app
+                        .display_name
+                        .to_lowercase()
+                        .split_whitespace()
+                        .any(|w| lower.contains(w));
                 if matches {
                     out.push(Installation {
                         id: format!("appimage:{}", path.display()),
@@ -162,7 +178,9 @@ fn discover_appimages(apps: &[Application], out: &mut Vec<Installation>) {
                         package_identifier: None,
                         package_manager: None,
                         architecture: CpuArch::Unknown,
-                        installation_root: Some(path.parent().unwrap_or(Path::new("/")).to_path_buf()),
+                        installation_root: Some(
+                            path.parent().unwrap_or(Path::new("/")).to_path_buf(),
+                        ),
                         provenance: Some("filesystem scan".into()),
                         health: HealthStatus::Unknown,
                         confidence: DetectionConfidence::Medium,

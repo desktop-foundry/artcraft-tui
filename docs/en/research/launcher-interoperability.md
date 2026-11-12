@@ -18,5 +18,3 @@
 - Sandbox path layout.
 - Self-update mechanism.
 - Release asset naming.
-EOF
-echo done

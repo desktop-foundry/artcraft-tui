@@ -60,7 +60,11 @@ fn detect_linux(info: &mut PlatformInfo) {
             if let Some(v) = line.strip_prefix("ID=") {
                 id = v.trim_matches('"').to_string();
             } else if let Some(v) = line.strip_prefix("ID_LIKE=") {
-                id_like = v.trim_matches('"').split_whitespace().map(String::from).collect();
+                id_like = v
+                    .trim_matches('"')
+                    .split_whitespace()
+                    .map(String::from)
+                    .collect();
             } else if let Some(v) = line.strip_prefix("VERSION_ID=") {
                 version = v.trim_matches('"').to_string();
             }

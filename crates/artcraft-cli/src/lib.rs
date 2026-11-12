@@ -49,10 +49,18 @@ pub fn run() -> ExitCode {
         }
         Some(Commands::Catalog) => {
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&ctx.catalog).unwrap_or_default());
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&ctx.catalog).unwrap_or_default()
+                );
             } else {
                 for a in &ctx.catalog {
-                    println!("{} - {}{}", a.id, a.display_name, if a.is_community { " (community)" } else { "" });
+                    println!(
+                        "{} - {}{}",
+                        a.id,
+                        a.display_name,
+                        if a.is_community { " (community)" } else { "" }
+                    );
                 }
             }
             ExitCode::SUCCESS
@@ -60,7 +68,10 @@ pub fn run() -> ExitCode {
         Some(Commands::Discover) => {
             let insts = ctx.discover_installations();
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&insts).unwrap_or_default());
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&insts).unwrap_or_default()
+                );
             } else {
                 if insts.is_empty() {
                     println!("No installations found.");
@@ -81,7 +92,10 @@ pub fn run() -> ExitCode {
         Some(Commands::Diagnose) => {
             let findings = ctx.diagnose();
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&findings).unwrap_or_default());
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&findings).unwrap_or_default()
+                );
             } else {
                 if findings.is_empty() {
                     println!("No findings.");
@@ -95,7 +109,10 @@ pub fn run() -> ExitCode {
         Some(Commands::Plan) => {
             let plan = ctx.reconcile_plan();
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&plan).unwrap_or_default());
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&plan).unwrap_or_default()
+                );
             } else {
                 println!("{}", artcraft_reconcile::plan_to_text(&plan));
             }

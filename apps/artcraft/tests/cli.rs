@@ -5,7 +5,9 @@ use predicates::prelude::*;
 fn catalog_lists_apps() {
     let mut cmd = Command::cargo_bin("artcraft").unwrap();
     cmd.arg("catalog");
-    cmd.assert().success().stdout(predicate::str::contains("PhotoCraft"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("PhotoCraft"));
 }
 
 #[test]

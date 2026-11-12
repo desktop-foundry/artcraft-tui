@@ -39,10 +39,19 @@ fn run_loop(
         terminal.draw(|f| {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Length(3), Constraint::Min(1), Constraint::Length(2)])
+                .constraints([
+                    Constraint::Length(3),
+                    Constraint::Min(1),
+                    Constraint::Length(2),
+                ])
                 .split(f.area());
             let header = Paragraph::new(Line::from(vec![
-                Span::styled("artcraft-tui", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "artcraft-tui",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw("  "),
                 Span::styled("installation reconciler", Style::default().fg(Color::Gray)),
             ]))
@@ -56,15 +65,26 @@ fn run_loop(
                     let installed = insts.iter().any(|x| x.app_id == a.id);
                     let mark = if installed { "●" } else { "○" };
                     let style = if i == selected {
-                        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                        Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default()
                     };
-                    ListItem::new(format!("{} {}  {}", mark, a.display_name, if a.is_community { "(community)" } else { "" }))
-                        .style(style)
+                    ListItem::new(format!(
+                        "{} {}  {}",
+                        mark,
+                        a.display_name,
+                        if a.is_community { "(community)" } else { "" }
+                    ))
+                    .style(style)
                 })
                 .collect();
-            let list = List::new(items).block(Block::default().borders(Borders::ALL).title(" Applications "));
+            let list = List::new(items).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Applications "),
+            );
             f.render_widget(list, chunks[1]);
 
             let footer = Paragraph::new("q: quit  ↑/↓: navigate  d: discover  (read-only preview)")

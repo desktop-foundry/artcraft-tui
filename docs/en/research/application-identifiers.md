@@ -16,5 +16,3 @@
 
 ## Catalog source
 - Bundled TOML baseline; extensible via config for community apps.
-EOF
-echo done

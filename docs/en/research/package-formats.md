@@ -23,5 +23,3 @@
 - Exact repository configuration commands for non-Flatpak formats (not captured from static page).
 - GPG key handling for apt/dnf/zypper repos.
 - Arch package repository URL and trust model.
-EOF
-echo done

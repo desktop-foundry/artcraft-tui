@@ -60,5 +60,3 @@
 - Removal of a format for an app.
 - New community apps.
 - Launcher sandbox storage layout changes.
-EOF
-echo done

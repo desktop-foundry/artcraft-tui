@@ -18,5 +18,3 @@
 
 ## Publisher authenticity
 - Checksum match != publisher authenticity; prefer signature verification when supported (investigate upstream signing).
-EOF
-echo done

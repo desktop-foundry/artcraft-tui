@@ -49,7 +49,11 @@ impl AppContext {
         }
         // broken: missing executable for package-managed? check
         for i in &insts {
-            if i.executable_path.as_ref().map(|p| !p.exists()).unwrap_or(false) {
+            if i.executable_path
+                .as_ref()
+                .map(|p| !p.exists())
+                .unwrap_or(false)
+            {
                 findings.push(DiagnosticFinding {
                     id: format!("missing-exe-{}", i.id),
                     severity: "error".into(),

@@ -28,5 +28,3 @@ Machine-readable output: add `--json` to any command.
 ## Status
 
 Early development. See `.development/` for engineering notes (ignored by git).
-EOF
-echo done

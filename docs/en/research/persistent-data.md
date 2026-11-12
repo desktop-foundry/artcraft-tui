@@ -22,5 +22,3 @@
 ## Migration implications
 - Flatpak -> DEB may require path translation; never blindly copy whole sandbox.
 - Unknown layouts require explicit user review.
-EOF
-echo done
