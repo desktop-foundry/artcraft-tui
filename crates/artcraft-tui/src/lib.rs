@@ -20,6 +20,7 @@ use std::io;
 enum Mode {
     Normal,
     Preferred,
+    Installing { current: String, log: String },
     Detail { index: usize },
     Confirm { plan_text: String },
     Result { summary: String },
@@ -76,6 +77,7 @@ fn estimate_size(app_id: &ApplicationId, platform: &Platform) -> String {
     }
 }
 
+#[allow(unused_assignments)]
 fn run_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     ctx: AppContext,
@@ -166,6 +168,7 @@ fn run_loop(
             let footer_text = match mode {
                 Mode::Normal => "q: quit  ↑/↓: navigate  Space: select  Enter: details  a: apply  p: preferred method",
                 Mode::Detail { .. } => "i: install  u: upgrade  r: remove  Esc: back",
+                Mode::Installing { .. } => "Installing... please wait",
                 Mode::Preferred => "1-4: choose  Esc: cancel",
                 Mode::Confirm { .. } => "e: execute  c/Esc: cancel",
                 Mode::Result { .. } => "any key: back",
@@ -174,6 +177,14 @@ fn run_loop(
             f.render_widget(footer, chunks[2]);
 
             match &mode {
+                Mode::Installing { current, log } => {
+                    let area = centered_rect(80, 80, f.area());
+                    f.render_widget(Clear, area);
+                    let title = format!(" Installing {} ", current);
+                    let block = Block::default().borders(Borders::ALL).title(title);
+                    let para = Paragraph::new(log.clone()).block(block);
+                    f.render_widget(para, area);
+                }
                 Mode::Preferred => {
                     let area = centered_rect(50, 40, f.area());
                     f.render_widget(Clear, area);
@@ -408,6 +419,7 @@ fn run_loop(
                         }
                         _ => {}
                     },
+                    Mode::Installing { .. } => { /* ignore input during install */ }
                     Mode::Confirm { .. } => match key.code {
                         KeyCode::Char('e') => {
                             if let Some(store) = &ctx.event_store {
@@ -415,17 +427,36 @@ fn run_loop(
                             }
                             let selected_apps: Vec<String> =
                                 to_install.iter().map(|x| x.0.clone()).collect();
-                            let mut summary = String::from("Execution summary:\n");
+                            let mut log = String::new();
                             for app in &selected_apps {
+                                mode = Mode::Installing {
+                                    current: app.clone(),
+                                    log: log.clone(),
+                                };
+                                let _ = terminal.draw(|f| {
+                                    let area = centered_rect(80, 80, f.area());
+                                    f.render_widget(Clear, area);
+                                    let title = format!(" Installing {} ", app);
+                                    let block = Block::default().borders(Borders::ALL).title(title);
+                                    let para = Paragraph::new(log.clone()).block(block);
+                                    f.render_widget(para, area);
+                                });
                                 let (ok, msg) = ctx.install_app(app);
-                                summary.push_str(&format!(
-                                    "  [{}] {} - {}\n",
-                                    if ok { "OK" } else { "FAIL" },
+                                log.push_str(&format!(
+                                    "\n=== {} : {} ===\n",
                                     app,
-                                    msg
+                                    if ok { "OK" } else { "FAIL" }
                                 ));
+                                log.push_str(&msg);
+                                log.push('\n');
                             }
                             to_install.clear();
+                            let mut summary = String::from("Execution summary:\n");
+                            for app in &selected_apps {
+                                summary.push_str(&format!("  - {}\n", app));
+                            }
+                            summary.push('\n');
+                            summary.push_str(&log);
                             mode = Mode::Result { summary };
                         }
                         KeyCode::Char('c') | KeyCode::Esc => {

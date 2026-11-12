@@ -207,19 +207,33 @@ pub fn run_command(cmd: &[String], privileged: bool) -> (bool, String) {
     } else {
         cmd.to_vec()
     };
-    // Actually use std::process::Command
     let program = c.remove(0);
-    println!("  -> {} {}", program, c.join(" "));
-    let status = std::process::Command::new(&program).args(&c).status();
-    match status {
-        Ok(s) => {
-            if s.success() {
-                (true, format!("completed (exit {})", s.code().unwrap_or(0)))
+    let output = std::process::Command::new(&program).args(&c).output();
+    match output {
+        Ok(o) => {
+            let mut log = String::new();
+            log.push_str(&format!("$ {} {}\n", program, c.join(" ")));
+            let stdout = String::from_utf8_lossy(&o.stdout);
+            let stderr = String::from_utf8_lossy(&o.stderr);
+            if !stdout.trim().is_empty() {
+                log.push_str(&stdout);
+                if !stdout.ends_with('\n') {
+                    log.push('\n');
+                }
+            }
+            if !stderr.trim().is_empty() {
+                log.push_str(&stderr);
+                if !stderr.ends_with('\n') {
+                    log.push('\n');
+                }
+            }
+            if o.status.success() {
+                (true, log)
             } else {
-                (false, format!("failed (exit {})", s.code().unwrap_or(-1)))
+                (false, log)
             }
         }
-        Err(e) => (false, e.to_string()),
+        Err(e) => (false, format!("error: {}", e)),
     }
 }
 
