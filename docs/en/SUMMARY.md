@@ -1,0 +1,15 @@
+# Summary
+
+- [Introduction](README.md)
+- [Getting Started](getting-started.md)
+- [CLI Reference](cli-reference.md)
+- [TUI Guide](tui-guide.md)
+- [Architecture](architecture.md)
+- [Research](research/README.md)
+  - [Upstream Ecosystem](research/upstream-ecosystem.md)
+  - [Package Formats](research/package-formats.md)
+  - [Application Identifiers](research/application-identifiers.md)
+  - [Persistent Data](research/persistent-data.md)
+  - [Launcher Interoperability](research/launcher-interoperability.md)
+  - [Security and Integrity](research/security-and-integrity.md)
+- [Changelog](../CHANGELOG.md)

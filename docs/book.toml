@@ -1,0 +1,11 @@
+[book]
+title = "artcraft-tui"
+description = "Documentation for artcraft-tui"
+authors = ["artcraft-tui contributors"]
+language = "en"
+src = "en"
+
+[output.html]
+default-theme = "rust"
+preferred-dark-theme = "coal"
+git-repository-url = "https://github.com/gnrfan/artcraft-tui"

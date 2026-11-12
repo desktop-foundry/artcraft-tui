@@ -29,3 +29,9 @@ Machine-readable output: add `--json` to any command.
 ## Status
 
 Early development. See `.development/` for engineering notes (ignored by git).
+
+## License
+
+MIT License - Copyright (c) 2026 Antonio Ognio
+
+Made with ❤️ from 🇵🇪. El Perú es clave 🔑.

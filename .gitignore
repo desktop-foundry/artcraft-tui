@@ -1,3 +1,22 @@
+# Build artifacts
+/target/
+**/*.rs.bk
+
+# Development notes (separate git repo)
 .development/
-target/
+
+# Secrets
 .token
+*.pem
+*.key
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+EOF
+echo done
