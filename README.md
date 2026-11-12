@@ -20,8 +20,7 @@ artcraft discover
 artcraft diagnose
 artcraft plan
 artcraft setup
-artcraft install-app <app-id>   # download + install one app
-artcraft install-deb <file.deb> # install a local .deb
+artcraft install <app-or-deb>   # smart: app id -> download+install; .deb path -> install local .deb
 artcraft tui   # or just `artcraft`
 ```
 
