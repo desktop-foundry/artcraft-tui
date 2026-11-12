@@ -267,6 +267,7 @@ name = "artcraft-tui"
 version = "0.1.0"
 dependencies = [
  "artcraft-application",
+ "artcraft-config",
  "artcraft-domain",
  "artcraft-reconcile",
  "crossterm",

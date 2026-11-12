@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 artcraft-application = { path = "../artcraft-application" }
+artcraft-config = { path = "../artcraft-config" }
 artcraft-domain = { path = "../artcraft-domain" }
 artcraft-reconcile = { path = "../artcraft-reconcile" }
 ratatui.workspace = true
