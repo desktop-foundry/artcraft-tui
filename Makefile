@@ -64,6 +64,21 @@ fmt: ## Format code
 fmt-check: ## Fail if any file is unformatted
 	$(Q)$(CARGO) fmt --all -- --check
 
+##@ Docs
+
+.PHONY: docs
+docs: ## Build the mdBook documentation
+	$(Q)mdbook build docs
+	$(Q)echo "built docs/book"
+
+.PHONY: docs-serve
+docs-serve: ## Serve docs locally with live reload
+	$(Q)mdbook serve docs --open
+
+.PHONY: docs-clean
+docs-clean: ## Remove built documentation
+	$(Q)rm -rf docs/book
+
 ##@ Install
 
 .PHONY: install
