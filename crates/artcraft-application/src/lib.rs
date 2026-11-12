@@ -262,3 +262,207 @@ impl AppContext {
         (ok, if msg.is_empty() { "done".into() } else { msg })
     }
 }
+
+impl AppContext {
+    /// Download and install an app from its GitHub releases based on preferred method.
+    pub fn install_app(&self, app_id: &str) -> (bool, String) {
+        use artcraft_events::EventSink;
+        let app = match self.catalog.iter().find(|a| a.id.0 == app_id) {
+            Some(a) => a,
+            None => return (false, "unknown app".into()),
+        };
+        let repo_url = match &app.official_repository {
+            Some(u) => u.clone(),
+            None => return (false, "no official repository".into()),
+        };
+        // parse owner/repo
+        let parts: Vec<&str> = repo_url.trim_end_matches('/').split('/').collect();
+        if parts.len() < 2 {
+            return (false, "bad repo url".into());
+        }
+        let owner = parts[parts.len() - 2];
+        let repo = parts[parts.len() - 1];
+
+        let preferred = artcraft_config::AppConfig::load()
+            .unwrap_or_default()
+            .preferred_method
+            .unwrap_or_else(|| "flatpak".into());
+
+        let (ext, install_kind) = match preferred.as_str() {
+            "apt" | "deb" => ("deb", "deb"),
+            "flatpak" => ("flatpak", "flatpak"),
+            "appimage" => ("AppImage", "appimage"),
+            "tarball" => ("tar.gz", "tarball"),
+            _ => ("deb", "deb"),
+        };
+
+        let arch = match self.platform.arch {
+            artcraft_domain::CpuArch::X86_64 => "x86_64",
+            artcraft_domain::CpuArch::Aarch64 => "aarch64",
+            artcraft_domain::CpuArch::Riscv64 => "riscv64",
+            _ => "x86_64",
+        };
+
+        let client = match reqwest::blocking::Client::builder()
+            .user_agent("artcraft-tui")
+            .build()
+        {
+            Ok(c) => c,
+            Err(e) => return (false, e.to_string()),
+        };
+
+        // fetch latest release
+        let api = format!(
+            "https://api.github.com/repos/{}/{}/releases/latest",
+            owner, repo
+        );
+        let resp = match client.get(&api).send() {
+            Ok(r) => r,
+            Err(e) => return (false, e.to_string()),
+        };
+        if !resp.status().is_success() {
+            return (false, format!("github api error: {}", resp.status()));
+        }
+        let json: serde_json::Value = match resp.json() {
+            Ok(j) => j,
+            Err(e) => return (false, e.to_string()),
+        };
+        let tag = json["tag_name"].as_str().unwrap_or("").to_string();
+        if tag.is_empty() {
+            return (false, "no release tag".into());
+        }
+        let version = tag.trim_start_matches('v');
+
+        // find asset
+        let asset_name = format!("{}-{}-linux-{}.{}", app_id, version, arch, ext);
+        let assets = json["assets"].as_array().cloned().unwrap_or_default();
+        let asset = assets
+            .iter()
+            .find(|a| a["name"].as_str() == Some(&asset_name));
+        let download_url = match asset.and_then(|a| a["browser_download_url"].as_str()) {
+            Some(u) => u.to_string(),
+            None => return (false, format!("asset not found: {}", asset_name)),
+        };
+
+        // download to temp
+        let tmp_dir = std::env::temp_dir();
+        let tmp_file = tmp_dir.join(&asset_name);
+        let mut resp = match client.get(&download_url).send() {
+            Ok(r) => r,
+            Err(e) => return (false, e.to_string()),
+        };
+        let mut file = match std::fs::File::create(&tmp_file) {
+            Ok(f) => f,
+            Err(e) => return (false, e.to_string()),
+        };
+        if let Err(e) = std::io::copy(&mut resp, &mut file) {
+            return (false, e.to_string());
+        }
+
+        // find sha256sums asset
+        let sums_asset = assets
+            .iter()
+            .find(|a| a["name"].as_str() == Some("SHA256SUMS.txt"));
+        if let Some(sa) = sums_asset {
+            if let Some(url) = sa["browser_download_url"].as_str() {
+                if let Ok(r) = client.get(url).send() {
+                    if let Ok(text) = r.text() {
+                        for line in text.lines() {
+                            let parts: Vec<&str> = line.split_whitespace().collect();
+                            if parts.len() >= 2 && parts[1].trim_start_matches('*') == asset_name {
+                                let expected = parts[0];
+                                if let Err(e) = artcraft_integrity::verify_file(&tmp_file, expected)
+                                {
+                                    return (false, format!("integrity check failed: {}", e));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // install based on kind
+        let (ok, msg) = match install_kind {
+            "deb" => {
+                let (o, m) = run_command(
+                    &[
+                        "apt-get".into(),
+                        "install".into(),
+                        "-y".into(),
+                        tmp_file.to_string_lossy().to_string(),
+                    ],
+                    true,
+                );
+                (o, m)
+            }
+            "flatpak" => {
+                let (o, m) = run_command(
+                    &[
+                        "flatpak".into(),
+                        "install".into(),
+                        "--user".into(),
+                        "-y".into(),
+                        tmp_file.to_string_lossy().to_string(),
+                    ],
+                    false,
+                );
+                (o, m)
+            }
+            "appimage" => {
+                let dest = directories::UserDirs::new()
+                    .map(|u| u.home_dir().join("Applications").join(&asset_name))
+                    .unwrap_or_else(|| std::path::PathBuf::from(&asset_name));
+                if let Some(parent) = dest.parent() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+                match std::fs::copy(&tmp_file, &dest) {
+                    Ok(_) => {
+                        use std::os::unix::fs::PermissionsExt;
+                        let _ =
+                            std::fs::set_permissions(&dest, std::fs::Permissions::from_mode(0o755));
+                        (true, format!("installed to {}", dest.display()))
+                    }
+                    Err(e) => (false, e.to_string()),
+                }
+            }
+            "tarball" => {
+                let dest = directories::UserDirs::new()
+                    .map(|u| u.home_dir().join(".local").join("opt").join(app_id))
+                    .unwrap_or_else(|| std::path::PathBuf::from(app_id));
+                let _ = std::fs::create_dir_all(&dest);
+                let status = std::process::Command::new("tar")
+                    .args([
+                        "-xzf",
+                        &tmp_file.to_string_lossy(),
+                        "-C",
+                        &dest.to_string_lossy(),
+                    ])
+                    .status();
+                match status {
+                    Ok(s) if s.success() => (true, format!("extracted to {}", dest.display())),
+                    Ok(s) => (false, format!("tar failed exit {}", s.code().unwrap_or(-1))),
+                    Err(e) => (false, e.to_string()),
+                }
+            }
+            _ => (false, "unsupported format".into()),
+        };
+
+        if ok {
+            if let Some(store) = &self.event_store {
+                store.record(artcraft_events::DomainEvent::InstallationCompleted {
+                    app_id: app_id.to_string(),
+                });
+            }
+        } else if let Some(store) = &self.event_store {
+            store.record(
+                artcraft_events::DomainEvent::ReconciliationExecutionFailed {
+                    plan_id: "install-app".into(),
+                    reason: msg.clone(),
+                },
+            );
+        }
+
+        (ok, if msg.is_empty() { "done".into() } else { msg })
+    }
+}

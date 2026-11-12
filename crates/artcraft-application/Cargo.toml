@@ -11,7 +11,11 @@ artcraft-catalog = { path = "../artcraft-catalog" }
 artcraft-discovery = { path = "../artcraft-discovery" }
 artcraft-reconcile = { path = "../artcraft-reconcile" }
 artcraft-config = { path = "../artcraft-config" }
+artcraft-integrity = { path = "../artcraft-integrity" }
 artcraft-packages = { path = "../artcraft-packages" }
+reqwest.workspace = true
+directories.workspace = true
+serde_json.workspace = true
 artcraft-storage = { path = "../artcraft-storage" }
 artcraft-events = { path = "../artcraft-events" }
 thiserror.workspace = true

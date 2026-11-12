@@ -20,16 +20,9 @@ use std::io;
 enum Mode {
     Normal,
     Preferred,
-    Detail {
-        index: usize,
-    },
-    Confirm {
-        plan_text: String,
-        plan: artcraft_domain::ReconciliationPlan,
-    },
-    Result {
-        summary: String,
-    },
+    Detail { index: usize },
+    Confirm { plan_text: String },
+    Result { summary: String },
 }
 
 pub fn run(ctx: AppContext) -> Result<(), Box<dyn std::error::Error>> {
@@ -271,7 +264,7 @@ fn run_loop(
                         f.render_widget(para, area);
                     }
                 }
-                Mode::Confirm { plan_text, .. } => {
+                Mode::Confirm { plan_text } => {
                     let area = centered_rect(70, 70, f.area());
                     f.render_widget(Clear, area);
                     let block = Block::default()
@@ -330,18 +323,32 @@ fn run_loop(
                                     to_install.iter().map(|x| x.0.clone()).collect();
                                 let _ = store.save_pending(&sel);
                             }
-                            // build desired state from selection
-                            let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
                             let desired: Vec<String> =
                                 to_install.iter().map(|x| x.0.clone()).collect();
-                            cfg.desired_apps = desired;
+                            let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
+                            cfg.desired_apps = desired.clone();
                             let _ = cfg.save();
-                            let plan = ctx.reconcile_plan();
-                            let text = artcraft_reconcile::plan_to_text(&plan);
-                            mode = Mode::Confirm {
-                                plan_text: text,
-                                plan,
-                            };
+
+                            if to_install.is_empty() {
+                                mode = Mode::Result {
+                                    summary: "No apps selected. Use Space to select.".into(),
+                                };
+                                continue;
+                            }
+
+                            let mut text =
+                                String::from("The following apps will be installed:\n\n");
+                            for id in &desired {
+                                let size = apps
+                                    .iter()
+                                    .find(|a| a.id.0 == *id)
+                                    .map(|a| estimate_size(&a.id, &ctx.platform.os))
+                                    .unwrap_or_default();
+                                text.push_str(&format!("  - {} ({})\n", id, size));
+                            }
+                            text.push_str(&format!("\nPreferred method: {}\n", preferred));
+                            text.push_str("\nPress e to execute, c/Esc to cancel.\n");
+                            mode = Mode::Confirm { plan_text: text };
                         }
                         _ => {}
                     },
@@ -401,21 +408,24 @@ fn run_loop(
                         }
                         _ => {}
                     },
-                    Mode::Confirm { plan, .. } => match key.code {
+                    Mode::Confirm { .. } => match key.code {
                         KeyCode::Char('e') => {
                             if let Some(store) = &ctx.event_store {
                                 let _ = store.clear_pending();
                             }
-                            let results = ctx.execute_plan(plan);
+                            let selected_apps: Vec<String> =
+                                to_install.iter().map(|x| x.0.clone()).collect();
                             let mut summary = String::from("Execution summary:\n");
-                            for (id, ok, msg) in &results {
+                            for app in &selected_apps {
+                                let (ok, msg) = ctx.install_app(app);
                                 summary.push_str(&format!(
                                     "  [{}] {} - {}\n",
-                                    if *ok { "OK" } else { "FAIL" },
-                                    id,
+                                    if ok { "OK" } else { "FAIL" },
+                                    app,
                                     msg
                                 ));
                             }
+                            to_install.clear();
                             mode = Mode::Result { summary };
                         }
                         KeyCode::Char('c') | KeyCode::Esc => {
