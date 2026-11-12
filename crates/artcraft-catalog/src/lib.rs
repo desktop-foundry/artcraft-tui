@@ -9,6 +9,10 @@ struct RawApp {
     id: String,
     display_name: String,
     description: String,
+    #[serde(default)]
+    short_description: Option<String>,
+    #[serde(default)]
+    latest_version: Option<String>,
     publisher: String,
     #[serde(default)]
     official_repository: Option<String>,
@@ -67,7 +71,12 @@ pub fn load_str(src: &str) -> Result<Vec<Application>, String> {
         out.push(Application {
             id: ApplicationId::new(a.id),
             display_name: a.display_name,
-            description: a.description,
+            description: a.description.clone(),
+            short_description: a
+                .short_description
+                .clone()
+                .unwrap_or_else(|| truncate_words(&a.description, 15)),
+            latest_version: a.latest_version.clone(),
             publisher: a.publisher,
             official_repository: a.official_repository,
             supported_platforms: a
@@ -90,6 +99,10 @@ pub fn load_str(src: &str) -> Result<Vec<Application>, String> {
         });
     }
     Ok(out)
+}
+
+fn truncate_words(s: &str, n: usize) -> String {
+    s.split_whitespace().take(n).collect::<Vec<_>>().join(" ")
 }
 
 pub fn bundled() -> Vec<Application> {

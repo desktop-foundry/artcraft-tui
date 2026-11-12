@@ -131,6 +131,8 @@ pub struct Application {
     pub id: ApplicationId,
     pub display_name: String,
     pub description: String,
+    pub short_description: String,
+    pub latest_version: Option<String>,
     pub publisher: String,
     pub official_repository: Option<String>,
     pub supported_platforms: Vec<Platform>,

@@ -19,6 +19,9 @@ use std::io;
 
 enum Mode {
     Normal,
+    Detail {
+        index: usize,
+    },
     Confirm {
         plan_text: String,
         plan: artcraft_domain::ReconciliationPlan,
@@ -88,6 +91,7 @@ fn run_loop(
     let insts = ctx.discover_installations();
     let mut mode = Mode::Normal;
     let mut to_install: HashSet<ApplicationId> = HashSet::new();
+    let mut to_remove: HashSet<ApplicationId> = HashSet::new();
 
     loop {
         terminal.draw(|f| {
@@ -154,7 +158,8 @@ fn run_loop(
             f.render_widget(list, chunks[1]);
 
             let footer_text = match mode {
-                Mode::Normal => "q: quit  ↑/↓: navigate  Space/Enter: select  a: apply",
+                Mode::Normal => "q: quit  ↑/↓: navigate  Space: select  Enter: details  a: apply",
+                Mode::Detail { .. } => "i: install  u: upgrade  r: remove  Esc: back",
                 Mode::Confirm { .. } => "e: execute  c/Esc: cancel",
                 Mode::Result { .. } => "any key: back",
             };
@@ -162,6 +167,85 @@ fn run_loop(
             f.render_widget(footer, chunks[2]);
 
             match &mode {
+                Mode::Detail { index } => {
+                    if let Some(app) = apps.get(*index) {
+                        let installed = insts.iter().any(|x| x.app_id == app.id);
+                        let inst_ver = insts
+                            .iter()
+                            .find(|x| x.app_id == app.id)
+                            .and_then(|x| x.installed_version.clone())
+                            .unwrap_or_else(|| "—".into());
+                        let latest = app
+                            .latest_version
+                            .clone()
+                            .unwrap_or_else(|| "unknown".into());
+                        let status = if installed {
+                            "Installed"
+                        } else {
+                            "Not installed"
+                        };
+                        let size = estimate_size(&app.id, &ctx.platform.os);
+                        let mut text = String::new();
+                        text.push_str(&format!(
+                            "Name: {}
+",
+                            app.display_name
+                        ));
+                        text.push_str(&format!(
+                            "Installed version: {}
+",
+                            inst_ver
+                        ));
+                        text.push_str(&format!(
+                            "Latest version: {}
+",
+                            latest
+                        ));
+                        text.push_str(&format!(
+                            "Description: {}
+",
+                            app.short_description
+                        ));
+                        text.push_str(&format!(
+                            "Size once installed: {}
+",
+                            size
+                        ));
+                        text.push_str(&format!(
+                            "Status: {}
+
+",
+                            status
+                        ));
+                        text.push_str(
+                            "Actions:
+",
+                        );
+                        text.push_str(
+                            "  i - Install
+",
+                        );
+                        text.push_str(
+                            "  u - Upgrade
+",
+                        );
+                        text.push_str(
+                            "  r - Remove
+",
+                        );
+                        text.push_str(
+                            "  Esc - Back
+",
+                        );
+                        let area = centered_rect(60, 60, f.area());
+                        f.render_widget(Clear, area);
+                        let block = Block::default()
+                            .borders(Borders::ALL)
+                            .title(" Application Details ");
+                        let para = Paragraph::new(text).block(block);
+                        f.render_widget(para, area);
+                    }
+                }
                 Mode::Confirm { plan_text, .. } => {
                     let area = centered_rect(70, 70, f.area());
                     f.render_widget(Clear, area);
@@ -195,7 +279,7 @@ fn run_loop(
                         KeyCode::Up => {
                             selected = selected.saturating_sub(1);
                         }
-                        KeyCode::Char(' ') | KeyCode::Enter => {
+                        KeyCode::Char(' ') => {
                             if let Some(app) = apps.get(selected) {
                                 if to_install.contains(&app.id) {
                                     to_install.remove(&app.id);
@@ -203,6 +287,9 @@ fn run_loop(
                                     to_install.insert(app.id.clone());
                                 }
                             }
+                        }
+                        KeyCode::Enter => {
+                            mode = Mode::Detail { index: selected };
                         }
                         KeyCode::Char('a') => {
                             // build desired state from selection
@@ -221,6 +308,38 @@ fn run_loop(
                                 plan_text: text,
                                 plan,
                             };
+                        }
+                        _ => {}
+                    },
+                    Mode::Detail { index } => match key.code {
+                        KeyCode::Esc | KeyCode::Char('q') => {
+                            mode = Mode::Normal;
+                        }
+                        KeyCode::Char('i') => {
+                            if let Some(app) = apps.get(*index) {
+                                if !to_install.contains(&app.id) {
+                                    to_install.insert(app.id.clone());
+                                }
+                                to_remove.remove(&app.id);
+                            }
+                            mode = Mode::Normal;
+                        }
+                        KeyCode::Char('u') => {
+                            if let Some(app) = apps.get(*index) {
+                                if !to_install.contains(&app.id) {
+                                    to_install.insert(app.id.clone());
+                                }
+                            }
+                            mode = Mode::Normal;
+                        }
+                        KeyCode::Char('r') => {
+                            if let Some(app) = apps.get(*index) {
+                                if !to_remove.contains(&app.id) {
+                                    to_remove.insert(app.id.clone());
+                                }
+                                to_install.remove(&app.id);
+                            }
+                            mode = Mode::Normal;
                         }
                         _ => {}
                     },
