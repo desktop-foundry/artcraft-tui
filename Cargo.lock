@@ -114,6 +114,7 @@ dependencies = [
  "artcraft-discovery",
  "artcraft-domain",
  "artcraft-events",
+ "artcraft-packages",
  "artcraft-platform",
  "artcraft-reconcile",
  "artcraft-storage",
@@ -153,6 +154,8 @@ dependencies = [
  "artcraft-catalog",
  "artcraft-config",
  "artcraft-domain",
+ "artcraft-events",
+ "artcraft-packages",
  "artcraft-platform",
  "artcraft-reconcile",
  "artcraft-tui",
@@ -197,8 +200,9 @@ name = "artcraft-events"
 version = "0.1.0"
 dependencies = [
  "artcraft-domain",
- "chrono",
+ "jtd",
  "serde",
+ "serde_json",
  "thiserror 2.0.21",
 ]
 
@@ -251,6 +255,7 @@ name = "artcraft-storage"
 version = "0.1.0"
 dependencies = [
  "artcraft-events",
+ "directories",
  "rusqlite",
  "serde",
  "serde_json",
@@ -263,6 +268,7 @@ version = "0.1.0"
 dependencies = [
  "artcraft-application",
  "artcraft-domain",
+ "artcraft-reconcile",
  "crossterm",
  "ratatui",
 ]
@@ -825,6 +831,18 @@ dependencies = [
  "cfg-if",
  "futures-util",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "jtd"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30d9414910f23583a4f3e8941296e561f226f2f31b65843767a79a32bf8cb671"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

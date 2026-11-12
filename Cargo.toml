@@ -37,6 +37,7 @@ serde_json = "1"
 toml = "0.8"
 # errors
 thiserror = "2"
+jtd = "0.3"
 anyhow = "1"
 # logging
 tracing = "0.1"

@@ -15,6 +15,10 @@ pub struct Journal {
     conn: Mutex<Connection>,
 }
 
+pub struct EventStore {
+    conn: Mutex<Connection>,
+}
+
 impl Journal {
     pub fn open(path: &std::path::Path) -> Result<Self, StorageError> {
         if let Some(parent) = path.parent() {
@@ -81,5 +85,80 @@ impl Journal {
 impl artcraft_events::EventSink for Journal {
     fn record(&self, event: DomainEvent) {
         let _ = self.record(&event);
+    }
+}
+
+impl EventStore {
+    pub fn path() -> std::path::PathBuf {
+        let base = std::env::var_os("XDG_DATA_HOME")
+            .map(std::path::PathBuf::from)
+            .or_else(|| directories::BaseDirs::new().map(|b| b.data_dir().to_path_buf()))
+            .unwrap_or_else(|| std::path::PathBuf::from("."));
+        base.join("artcraft-tui")
+            .join("artcraft-tui-domain-events.db")
+    }
+
+    pub fn open_default() -> Result<Self, StorageError> {
+        Self::open(&Self::path())
+    }
+
+    pub fn open(path: &std::path::Path) -> Result<Self, StorageError> {
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let conn = Connection::open(path)?;
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS event_domains (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_name TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                occurred_at TEXT NOT NULL,
+                schema_version TEXT NOT NULL DEFAULT '1'
+            );",
+        )?;
+        Ok(Self {
+            conn: Mutex::new(conn),
+        })
+    }
+
+    pub fn record_event(&self, event_name: &str, payload: &str) -> Result<(), StorageError> {
+        let conn = self.conn.lock().map_err(|_| StorageError::Lock)?;
+        conn.execute(
+            "INSERT INTO event_domains (event_name, payload, occurred_at) VALUES (?1, ?2, datetime('now'))",
+            params![event_name, payload],
+        )?;
+        Ok(())
+    }
+
+    pub fn count(&self) -> Result<i64, StorageError> {
+        let conn = self.conn.lock().map_err(|_| StorageError::Lock)?;
+        let c: i64 = conn.query_row("SELECT COUNT(*) FROM event_domains", [], |r| r.get(0))?;
+        Ok(c)
+    }
+
+    pub fn recent(&self, limit: usize) -> Result<Vec<(String, String)>, StorageError> {
+        let conn = self.conn.lock().map_err(|_| StorageError::Lock)?;
+        let mut stmt = conn
+            .prepare("SELECT event_name, payload FROM event_domains ORDER BY id DESC LIMIT ?1")?;
+        let rows = stmt.query_map(params![limit as i64], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+        })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
+    }
+}
+
+impl artcraft_events::EventSink for EventStore {
+    fn record(&self, event: artcraft_events::DomainEvent) {
+        let payload = serde_json::to_string(&event).unwrap_or_default();
+        // JTD validation (best-effort)
+        let name = event.name();
+        if !event.validate_self() {
+            // still record but mark? We'll record anyway for audit.
+        }
+        let _ = self.record_event(name, &payload);
     }
 }

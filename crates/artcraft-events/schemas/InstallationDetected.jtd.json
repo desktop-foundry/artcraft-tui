@@ -1,0 +1,16 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "InstallationDetected"
+      ]
+    },
+    "installation_id": {
+      "type": "string"
+    },
+    "app_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

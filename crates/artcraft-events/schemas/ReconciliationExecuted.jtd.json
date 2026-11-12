@@ -1,0 +1,16 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "ReconciliationExecuted"
+      ]
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "operations": {
+      "type": "int32"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "ReconciliationApproved"
+      ]
+    },
+    "plan_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

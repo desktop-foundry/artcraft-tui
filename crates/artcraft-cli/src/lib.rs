@@ -17,6 +17,14 @@ pub enum Commands {
     Discover,
     Diagnose,
     Plan,
+    Apply {
+        #[arg(long)]
+        install: Option<String>,
+        #[arg(long)]
+        remove: Option<String>,
+        #[arg(long)]
+        yes: bool,
+    },
     Setup {
         #[arg(long)]
         method: Option<String>,
@@ -127,11 +135,17 @@ pub fn run() -> ExitCode {
             }
             ExitCode::SUCCESS
         }
+        Some(Commands::Apply {
+            install,
+            remove,
+            yes,
+        }) => do_apply(&ctx, install, remove, yes),
         Some(Commands::Setup { method }) => do_setup(&ctx, method),
     }
 }
 
 fn do_setup(ctx: &artcraft_application::AppContext, method: Option<String>) -> ExitCode {
+    use artcraft_events::EventSink;
     use std::io::{self, Write};
     println!("Detected platform: {:?}", ctx.platform.os);
     println!(
@@ -202,6 +216,11 @@ fn do_setup(ctx: &artcraft_application::AppContext, method: Option<String>) -> E
     println!();
     println!("Selected preferred method: {}", chosen);
 
+    if let Some(store) = &ctx.event_store {
+        store.record(artcraft_events::DomainEvent::PreferredMethodSelected {
+            method: chosen.clone(),
+        });
+    }
     let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
     cfg.preferred_method = Some(chosen.clone());
     if let Err(e) = cfg.save() {
@@ -217,5 +236,148 @@ fn do_setup(ctx: &artcraft_application::AppContext, method: Option<String>) -> E
     }
     println!();
     println!("Run `artcraft plan` to create a reconciliation plan.");
+    ExitCode::SUCCESS
+}
+
+fn do_apply(
+    ctx: &artcraft_application::AppContext,
+    install: Option<String>,
+    remove: Option<String>,
+    yes: bool,
+) -> ExitCode {
+    use artcraft_events::EventSink;
+    use std::io::{self, Write};
+
+    let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
+    let mut desired: Vec<String> = cfg.desired_apps.clone();
+
+    if let Some(list) = install {
+        for app in list.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()) {
+            if !desired.iter().any(|d| d == app) {
+                desired.push(app.to_string());
+            }
+        }
+    }
+    let remove_list: Vec<String> = remove
+        .as_deref()
+        .unwrap_or("")
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    for app in &remove_list {
+        desired.retain(|d| d != app);
+    }
+    cfg.desired_apps = desired.clone();
+    let _ = cfg.save();
+
+    if let Some(store) = &ctx.event_store {
+        store.record(artcraft_events::DomainEvent::AppSelectionChanged {
+            apps: desired.clone(),
+        });
+    }
+
+    let plan = ctx.reconcile_plan();
+    println!("Reconciliation plan: {}", plan.id);
+    println!("{}", artcraft_reconcile::plan_to_text(&plan));
+
+    // Removal summary
+    if !remove_list.is_empty() {
+        println!("Removals requested: {}", remove_list.join(", "));
+    }
+
+    if !yes {
+        print!("Execute? [y/N]: ");
+        io::stdout().flush().ok();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).ok();
+        if !input.trim().eq_ignore_ascii_case("y") {
+            println!("Aborted.");
+            return ExitCode::SUCCESS;
+        }
+    }
+
+    if let Some(store) = &ctx.event_store {
+        store.record(artcraft_events::DomainEvent::ReconciliationApproved {
+            plan_id: plan.id.clone(),
+        });
+    }
+
+    // Execute installs/migrations
+    let results = ctx.execute_plan(&plan);
+
+    // Execute removals
+    let mut remove_results: Vec<(String, bool, String)> = Vec::new();
+    if !remove_list.is_empty() {
+        let insts = ctx.discover_installations();
+        let preferred = cfg
+            .preferred_method
+            .clone()
+            .unwrap_or_else(|| "flatpak".into());
+        for app in &remove_list {
+            let matching: Vec<_> = insts
+                .iter()
+                .filter(|i| i.app_id.to_string() == *app)
+                .collect();
+            if matching.is_empty() {
+                remove_results.push((format!("remove:{}", app), true, "not installed".into()));
+                continue;
+            }
+            for inst in matching {
+                let mgr: Box<dyn artcraft_packages::PackageManager> =
+                    if preferred == "apt" || preferred == "deb" {
+                        Box::new(artcraft_packages::AptManager)
+                    } else {
+                        Box::new(artcraft_packages::FlatpakManager)
+                    };
+                match mgr.plan_remove(inst) {
+                    Ok(rp) => {
+                        let mut ok = true;
+                        let mut msg = String::new();
+                        for cmd in &rp.commands {
+                            let (s, m) =
+                                artcraft_application::run_command(cmd, rp.requires_privileges);
+                            ok = s;
+                            msg = m;
+                            if !ok {
+                                break;
+                            }
+                        }
+                        if ok {
+                            msg = format!("removed {}", app);
+                        }
+                        if let Some(store) = &ctx.event_store {
+                            store.record(artcraft_events::DomainEvent::OperationCompleted {
+                                operation_id: format!("remove:{}", inst.id),
+                                kind: "remove".into(),
+                            });
+                        }
+                        remove_results.push((format!("remove:{}", app), ok, msg));
+                    }
+                    Err(e) => {
+                        remove_results.push((format!("remove:{}", app), false, e.to_string()))
+                    }
+                }
+            }
+        }
+    }
+
+    // Summary
+    println!();
+    println!("Execution summary:");
+    for (id, ok, msg) in &results {
+        println!("  [{}] {} - {}", if *ok { "OK" } else { "FAIL" }, id, msg);
+    }
+    for (id, ok, msg) in &remove_results {
+        println!("  [{}] {} - {}", if *ok { "OK" } else { "FAIL" }, id, msg);
+    }
+    let total_fail =
+        results.iter().filter(|r| !r.1).count() + remove_results.iter().filter(|r| !r.1).count();
+    println!();
+    if total_fail == 0 {
+        println!("All operations completed.");
+    } else {
+        println!("{} operation(s) failed.", total_fail);
+    }
     ExitCode::SUCCESS
 }

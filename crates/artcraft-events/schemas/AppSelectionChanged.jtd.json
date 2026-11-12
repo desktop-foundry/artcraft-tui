@@ -1,0 +1,15 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "AppSelectionChanged"
+      ]
+    },
+    "apps": {
+      "elements": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

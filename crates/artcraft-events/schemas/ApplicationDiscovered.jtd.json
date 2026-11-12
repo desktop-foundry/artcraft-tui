@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "ApplicationDiscovered"
+      ]
+    },
+    "app": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "PlatformDetected"
+      ]
+    },
+    "os": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

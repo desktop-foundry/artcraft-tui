@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "MigrationCompleted"
+      ]
+    },
+    "migration_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

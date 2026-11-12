@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "InstallationVerified"
+      ]
+    },
+    "app_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

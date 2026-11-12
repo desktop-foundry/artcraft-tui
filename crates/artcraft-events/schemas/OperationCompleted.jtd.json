@@ -1,0 +1,16 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "OperationCompleted"
+      ]
+    },
+    "operation_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "RollbackStarted"
+      ]
+    },
+    "migration_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

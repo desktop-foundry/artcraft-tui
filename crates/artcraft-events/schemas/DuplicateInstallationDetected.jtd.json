@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "DuplicateInstallationDetected"
+      ]
+    },
+    "app_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

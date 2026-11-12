@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "InstallationCompleted"
+      ]
+    },
+    "app_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

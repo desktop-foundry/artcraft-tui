@@ -1,5 +1,6 @@
 use artcraft_application::AppContext;
 use artcraft_domain::Application;
+
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
@@ -10,10 +11,21 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
     Terminal,
 };
 use std::io;
+
+enum Mode {
+    Normal,
+    Confirm {
+        plan_text: String,
+        plan: artcraft_domain::ReconciliationPlan,
+    },
+    Result {
+        summary: String,
+    },
+}
 
 pub fn run(ctx: AppContext) -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
@@ -35,6 +47,8 @@ fn run_loop(
     let mut selected: usize = 0;
     let apps: Vec<Application> = ctx.catalog.clone();
     let insts = ctx.discover_installations();
+    let mut mode = Mode::Normal;
+
     loop {
         terminal.draw(|f| {
             let chunks = Layout::default()
@@ -87,27 +101,107 @@ fn run_loop(
             );
             f.render_widget(list, chunks[1]);
 
-            let footer = Paragraph::new("q: quit  ↑/↓: navigate  d: discover  (read-only preview)")
-                .style(Style::default().fg(Color::DarkGray));
+            let footer_text = match mode {
+                Mode::Normal => "q: quit  ↑/↓: navigate  a: apply (confirm)  d: discover",
+                Mode::Confirm { .. } => "e: execute  c/Esc: cancel",
+                Mode::Result { .. } => "any key: back to normal",
+            };
+            let footer = Paragraph::new(footer_text).style(Style::default().fg(Color::DarkGray));
             f.render_widget(footer, chunks[2]);
+
+            // Modal overlay
+            match &mode {
+                Mode::Confirm { plan_text, .. } => {
+                    let area = centered_rect(60, 60, f.area());
+                    f.render_widget(Clear, area);
+                    let block = Block::default()
+                        .borders(Borders::ALL)
+                        .title(" Confirm Reconciliation ");
+                    let para = Paragraph::new(plan_text.clone()).block(block);
+                    f.render_widget(para, area);
+                }
+                Mode::Result { summary } => {
+                    let area = centered_rect(60, 60, f.area());
+                    f.render_widget(Clear, area);
+                    let block = Block::default().borders(Borders::ALL).title(" Result ");
+                    let para = Paragraph::new(summary.clone()).block(block);
+                    f.render_widget(para, area);
+                }
+                Mode::Normal => {}
+            }
         })?;
 
         if event::poll(std::time::Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
-                match key.code {
-                    KeyCode::Char('q') | KeyCode::Esc => break,
-                    KeyCode::Down => {
-                        if selected + 1 < apps.len() {
-                            selected += 1;
+                match &mut mode {
+                    Mode::Normal => match key.code {
+                        KeyCode::Char('q') | KeyCode::Esc => break,
+                        KeyCode::Down => {
+                            if selected + 1 < apps.len() {
+                                selected += 1;
+                            }
                         }
+                        KeyCode::Up => {
+                            selected = selected.saturating_sub(1);
+                        }
+                        KeyCode::Char('a') => {
+                            let plan = ctx.reconcile_plan();
+                            let text = artcraft_reconcile::plan_to_text(&plan);
+                            mode = Mode::Confirm {
+                                plan_text: text,
+                                plan,
+                            };
+                        }
+                        _ => {}
+                    },
+                    Mode::Confirm { plan, .. } => match key.code {
+                        KeyCode::Char('e') => {
+                            let results = ctx.execute_plan(plan);
+                            let mut summary = String::from("Execution summary:\n");
+                            for (id, ok, msg) in &results {
+                                summary.push_str(&format!(
+                                    "  [{}] {} - {}\n",
+                                    if *ok { "OK" } else { "FAIL" },
+                                    id,
+                                    msg
+                                ));
+                            }
+                            mode = Mode::Result { summary };
+                        }
+                        KeyCode::Char('c') | KeyCode::Esc => {
+                            mode = Mode::Normal;
+                        }
+                        _ => {}
+                    },
+                    Mode::Result { .. } => {
+                        mode = Mode::Normal;
                     }
-                    KeyCode::Up => {
-                        selected = selected.saturating_sub(1);
-                    }
-                    _ => {}
                 }
             }
         }
     }
     Ok(())
+}
+
+fn centered_rect(
+    percent_x: u16,
+    percent_y: u16,
+    r: ratatui::layout::Rect,
+) -> ratatui::layout::Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "BackupCreated"
+      ]
+    },
+    "backup_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

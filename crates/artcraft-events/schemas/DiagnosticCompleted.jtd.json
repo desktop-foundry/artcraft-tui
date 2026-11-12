@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "DiagnosticCompleted"
+      ]
+    },
+    "findings": {
+      "type": "int32"
+    }
+  },
+  "additionalProperties": true
+}

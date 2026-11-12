@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "DesiredStateChanged"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

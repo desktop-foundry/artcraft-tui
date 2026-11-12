@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "PreferredMethodSelected"
+      ]
+    },
+    "method": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

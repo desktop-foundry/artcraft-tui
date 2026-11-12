@@ -10,6 +10,8 @@ artcraft-domain = { path = "../artcraft-domain" }
 artcraft-platform = { path = "../artcraft-platform" }
 artcraft-catalog = { path = "../artcraft-catalog" }
 artcraft-config = { path = "../artcraft-config" }
+artcraft-events = { path = "../artcraft-events" }
+artcraft-packages = { path = "../artcraft-packages" }
 artcraft-reconcile = { path = "../artcraft-reconcile" }
 artcraft-tui = { path = "../artcraft-tui" }
 clap.workspace = true

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "BackupVerified"
+      ]
+    },
+    "backup_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

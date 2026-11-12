@@ -1,0 +1,16 @@
+{
+  "properties": {
+    "type": {
+      "enum": [
+        "ReconciliationExecutionFailed"
+      ]
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}
