@@ -221,3 +221,43 @@ pub fn run_command(cmd: &[String], privileged: bool) -> (bool, String) {
         Err(e) => (false, e.to_string()),
     }
 }
+
+impl AppContext {
+    /// Install a local .deb package on Ubuntu/Debian-compatible systems.
+    pub fn install_deb(&self, path: &std::path::Path) -> (bool, String) {
+        use artcraft_events::EventSink;
+        if !path.exists() {
+            return (false, format!("file not found: {}", path.display()));
+        }
+        // verify it's a deb via dpkg-deb
+        let check = std::process::Command::new("dpkg-deb")
+            .args(["-I", &path.to_string_lossy()])
+            .output();
+        if check.map(|o| !o.status.success()).unwrap_or(true) {
+            return (false, "not a valid .deb package".into());
+        }
+        // prefer apt for dependency resolution
+        let cmd = vec![
+            "apt-get".to_string(),
+            "install".to_string(),
+            "-y".to_string(),
+            path.to_string_lossy().to_string(),
+        ];
+        let (ok, msg) = run_command(&cmd, true);
+        if let Some(store) = &self.event_store {
+            if ok {
+                store.record(artcraft_events::DomainEvent::InstallationCompleted {
+                    app_id: path.to_string_lossy().to_string(),
+                });
+            } else {
+                store.record(
+                    artcraft_events::DomainEvent::ReconciliationExecutionFailed {
+                        plan_id: "install-deb".into(),
+                        reason: msg.clone(),
+                    },
+                );
+            }
+        }
+        (ok, if msg.is_empty() { "done".into() } else { msg })
+    }
+}

@@ -17,6 +17,11 @@ pub enum Commands {
     Discover,
     Diagnose,
     Plan,
+    InstallDeb {
+        path: String,
+        #[arg(long)]
+        yes: bool,
+    },
     Apply {
         #[arg(long)]
         install: Option<String>,
@@ -140,6 +145,17 @@ pub fn run() -> ExitCode {
             remove,
             yes,
         }) => do_apply(&ctx, install, remove, yes),
+        Some(Commands::InstallDeb { path, yes: _ }) => {
+            let p = std::path::PathBuf::from(path);
+            println!("Installing .deb: {}", p.display());
+            let (ok, msg) = ctx.install_deb(&p);
+            println!("[{}] {}", if ok { "OK" } else { "FAIL" }, msg);
+            if ok {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::FAILURE
+            }
+        }
         Some(Commands::Setup { method }) => do_setup(&ctx, method),
     }
 }

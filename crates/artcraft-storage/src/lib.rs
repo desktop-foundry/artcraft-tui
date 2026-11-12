@@ -114,6 +114,12 @@ impl EventStore {
                 payload TEXT NOT NULL,
                 occurred_at TEXT NOT NULL,
                 schema_version TEXT NOT NULL DEFAULT '1'
+            );
+            CREATE TABLE IF NOT EXISTS pending_work (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                selection TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending'
             );",
         )?;
         Ok(Self {
@@ -160,5 +166,42 @@ impl artcraft_events::EventSink for EventStore {
             // still record but mark? We'll record anyway for audit.
         }
         let _ = self.record_event(name, &payload);
+    }
+}
+
+impl EventStore {
+    pub fn save_pending(&self, selection: &[String]) -> Result<(), StorageError> {
+        let json = serde_json::to_string(selection).unwrap_or_default();
+        let conn = self.conn.lock().map_err(|_| StorageError::Lock)?;
+        // replace any existing pending
+        conn.execute("DELETE FROM pending_work WHERE status='pending'", [])?;
+        conn.execute(
+            "INSERT INTO pending_work (selection, created_at, status) VALUES (?1, datetime('now'), 'pending')",
+            params![json],
+        )?;
+        Ok(())
+    }
+
+    pub fn load_pending(&self) -> Result<Vec<String>, StorageError> {
+        let conn = self.conn.lock().map_err(|_| StorageError::Lock)?;
+        let mut stmt = conn.prepare(
+            "SELECT selection FROM pending_work WHERE status='pending' ORDER BY id DESC LIMIT 1",
+        )?;
+        let mut rows = stmt.query([])?;
+        if let Some(row) = rows.next()? {
+            let s: String = row.get(0)?;
+            Ok(serde_json::from_str(&s).unwrap_or_default())
+        } else {
+            Ok(vec![])
+        }
+    }
+
+    pub fn clear_pending(&self) -> Result<(), StorageError> {
+        let conn = self.conn.lock().map_err(|_| StorageError::Lock)?;
+        conn.execute(
+            "UPDATE pending_work SET status='done' WHERE status='pending'",
+            [],
+        )?;
+        Ok(())
     }
 }

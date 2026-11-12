@@ -92,6 +92,11 @@ fn run_loop(
     let mut mode = Mode::Normal;
     let mut to_install: HashSet<ApplicationId> = HashSet::new();
     let mut to_remove: HashSet<ApplicationId> = HashSet::new();
+    if let Some(store) = &ctx.event_store {
+        for app in store.load_pending().unwrap_or_default() {
+            to_install.insert(ApplicationId::new(app));
+        }
+    }
 
     loop {
         terminal.draw(|f| {
@@ -287,11 +292,21 @@ fn run_loop(
                                     to_install.insert(app.id.clone());
                                 }
                             }
+                            if let Some(store) = &ctx.event_store {
+                                let sel: Vec<String> =
+                                    to_install.iter().map(|x| x.0.clone()).collect();
+                                let _ = store.save_pending(&sel);
+                            }
                         }
                         KeyCode::Enter => {
                             mode = Mode::Detail { index: selected };
                         }
                         KeyCode::Char('a') => {
+                            if let Some(store) = &ctx.event_store {
+                                let sel: Vec<String> =
+                                    to_install.iter().map(|x| x.0.clone()).collect();
+                                let _ = store.save_pending(&sel);
+                            }
                             // build desired state from selection
                             let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
                             let mut desired: Vec<String> = cfg.desired_apps.clone();
@@ -345,6 +360,9 @@ fn run_loop(
                     },
                     Mode::Confirm { plan, .. } => match key.code {
                         KeyCode::Char('e') => {
+                            if let Some(store) = &ctx.event_store {
+                                let _ = store.clear_pending();
+                            }
                             let results = ctx.execute_plan(plan);
                             let mut summary = String::from("Execution summary:\n");
                             for (id, ok, msg) in &results {
