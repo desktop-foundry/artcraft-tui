@@ -1,9 +1,5 @@
-use artcraft_catalog;
 use artcraft_config::AppConfig;
-use artcraft_discovery;
 use artcraft_domain::{DiagnosticFinding, PlatformInfo};
-use artcraft_platform;
-use artcraft_reconcile;
 use artcraft_storage::Journal;
 
 pub struct AppContext {
@@ -74,5 +70,11 @@ impl AppContext {
         let desired = cfg.to_desired_state();
         let insts = self.discover_installations();
         artcraft_reconcile::build_plan(&desired, &insts)
+    }
+}
+
+impl Default for AppContext {
+    fn default() -> Self {
+        Self::new()
     }
 }

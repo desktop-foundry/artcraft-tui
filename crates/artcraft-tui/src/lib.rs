@@ -82,9 +82,7 @@ fn run_loop(
                         }
                     }
                     KeyCode::Up => {
-                        if selected > 0 {
-                            selected -= 1;
-                        }
+                        selected = selected.saturating_sub(1);
                     }
                     _ => {}
                 }
