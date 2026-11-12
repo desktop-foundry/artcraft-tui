@@ -17,16 +17,25 @@ pub enum Commands {
     Discover,
     Diagnose,
     Plan,
-    Setup,
+    Setup {
+        #[arg(long)]
+        method: Option<String>,
+    },
     Tui,
 }
 
 pub fn run() -> ExitCode {
     let cli = Cli::parse();
     let ctx = artcraft_application::AppContext::new();
+    // First-launch wizard.
+    if matches!(cli.command, None | Some(Commands::Tui)) {
+        let cfg = artcraft_config::AppConfig::load().unwrap_or_default();
+        if cfg.preferred_method.is_none() {
+            let _ = do_setup(&ctx, None);
+        }
+    }
     match cli.command {
         None | Some(Commands::Tui) => {
-            // launch tui
             if let Err(e) = artcraft_tui::run(ctx) {
                 eprintln!("tui error: {}", e);
                 return ExitCode::FAILURE;
@@ -118,21 +127,95 @@ pub fn run() -> ExitCode {
             }
             ExitCode::SUCCESS
         }
-        Some(Commands::Setup) => {
-            // first-launch wizard minimal
-            println!("Detected platform: {:?}", ctx.platform.os);
-            println!("Supported methods:");
-            println!("  apt/flatpak/appimage/tarball");
-            println!("Run with config to set preference. Saving default: flatpak");
-            let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
-            if cfg.preferred_method.is_none() {
-                cfg.preferred_method = Some("flatpak".into());
-                let _ = cfg.save();
+        Some(Commands::Setup { method }) => do_setup(&ctx, method),
+    }
+}
+
+fn do_setup(ctx: &artcraft_application::AppContext, method: Option<String>) -> ExitCode {
+    use std::io::{self, Write};
+    println!("Detected platform: {:?}", ctx.platform.os);
+    println!(
+        "Distro: {} {}",
+        ctx.platform.distro_id, ctx.platform.version
+    );
+    println!("Architecture: {:?}", ctx.platform.arch);
+    println!();
+
+    let mut methods: Vec<(&str, &str, bool)> = Vec::new();
+    match ctx.platform.os {
+        artcraft_domain::Platform::Linux => {
+            if ctx
+                .platform
+                .package_managers
+                .iter()
+                .any(|m| m == "apt" || m == "dpkg")
+            {
+                methods.push(("apt", "APT repository / DEB", true));
             }
-            println!("Saved preference: {:?}", cfg.preferred_method);
-            let findings = ctx.diagnose();
-            println!("Initial diagnosis findings: {}", findings.len());
-            ExitCode::SUCCESS
+            if ctx.platform.flatpak_available {
+                methods.push(("flatpak", "Flatpak", !methods.iter().any(|m| m.2)));
+            }
+            methods.push(("appimage", "AppImage", methods.is_empty()));
+            methods.push(("tarball", "Portable tarball", false));
+        }
+        artcraft_domain::Platform::MacOS => {
+            methods.push(("homebrew", "Homebrew Cask", true));
+            methods.push(("dmg", "macOS DMG", false));
+            methods.push(("tarball", "Portable tarball", false));
+        }
+        artcraft_domain::Platform::Windows => {
+            methods.push(("msi", "Windows MSI", true));
+            methods.push(("portable", "Windows portable", false));
+            methods.push(("tarball", "Portable tarball", false));
+        }
+        _ => {
+            methods.push(("tarball", "Portable tarball", true));
         }
     }
+
+    let chosen = if let Some(m) = method {
+        m
+    } else {
+        println!("Choose your preferred installation method:");
+        println!();
+        for (i, (_id, label, rec)) in methods.iter().enumerate() {
+            if *rec {
+                println!("  {}. {}   (Recommended)", i + 1, label);
+            } else {
+                println!("  {}. {}", i + 1, label);
+            }
+        }
+        println!();
+        print!("Enter number [1]: ");
+        io::stdout().flush().ok();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).ok();
+        let idx: usize = input.trim().parse().unwrap_or(1);
+        let idx = if idx == 0 || idx > methods.len() {
+            1
+        } else {
+            idx
+        };
+        methods[idx - 1].0.to_string()
+    };
+
+    println!();
+    println!("Selected preferred method: {}", chosen);
+
+    let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
+    cfg.preferred_method = Some(chosen.clone());
+    if let Err(e) = cfg.save() {
+        eprintln!("save error: {}", e);
+    }
+    println!("Saved to {}", artcraft_config::AppConfig::path().display());
+
+    let findings = ctx.diagnose();
+    println!();
+    println!("Initial diagnosis findings: {}", findings.len());
+    for f in &findings {
+        println!("  [{}] {}", f.severity, f.title);
+    }
+    println!();
+    println!("Run `artcraft plan` to create a reconciliation plan.");
+    ExitCode::SUCCESS
 }

@@ -22,10 +22,11 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn path() -> PathBuf {
-        let base = directories::ProjectDirs::from("com", "artcraft", "artcraft-tui")
-            .map(|p| p.config_dir().to_path_buf())
+        let base = std::env::var_os("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .or_else(|| directories::BaseDirs::new().map(|b| b.config_dir().to_path_buf()))
             .unwrap_or_else(|| PathBuf::from("."));
-        base.join("config.toml")
+        base.join("artcraft-tui").join("config.toml")
     }
 
     pub fn load() -> Result<Self, ConfigError> {
