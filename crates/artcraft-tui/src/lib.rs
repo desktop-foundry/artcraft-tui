@@ -19,6 +19,7 @@ use std::io;
 
 enum Mode {
     Normal,
+    Preferred,
     Detail {
         index: usize,
     },
@@ -89,7 +90,14 @@ fn run_loop(
     let mut selected: usize = 0;
     let apps: Vec<Application> = ctx.catalog.clone();
     let insts = ctx.discover_installations();
-    let mut mode = Mode::Normal;
+    let cfg0 = artcraft_config::AppConfig::load().unwrap_or_default();
+    let is_first_run = cfg0.preferred_method.is_none();
+    let mut preferred: String = cfg0.preferred_method.unwrap_or_else(|| "flatpak".into());
+    let mut mode = if is_first_run {
+        Mode::Preferred
+    } else {
+        Mode::Normal
+    };
     let mut to_install: HashSet<ApplicationId> = HashSet::new();
     let mut to_remove: HashSet<ApplicationId> = HashSet::new();
     if let Some(store) = &ctx.event_store {
@@ -163,8 +171,9 @@ fn run_loop(
             f.render_widget(list, chunks[1]);
 
             let footer_text = match mode {
-                Mode::Normal => "q: quit  ↑/↓: navigate  Space: select  Enter: details  a: apply",
+                Mode::Normal => "q: quit  ↑/↓: navigate  Space: select  Enter: details  a: apply  p: preferred method",
                 Mode::Detail { .. } => "i: install  u: upgrade  r: remove  Esc: back",
+                Mode::Preferred => "1-4: choose  Esc: cancel",
                 Mode::Confirm { .. } => "e: execute  c/Esc: cancel",
                 Mode::Result { .. } => "any key: back",
             };
@@ -172,6 +181,17 @@ fn run_loop(
             f.render_widget(footer, chunks[2]);
 
             match &mode {
+                Mode::Preferred => {
+                    let area = centered_rect(50, 40, f.area());
+                    f.render_widget(Clear, area);
+                    let text = format!(
+                        "Choose preferred installation method:\n\n  1. APT / DEB\n  2. Flatpak\n  3. AppImage\n  4. Tarball\n\nCurrent: {}\n",
+                        preferred
+                    );
+                    let block = Block::default().borders(Borders::ALL).title(" Preferred Method ");
+                    let para = Paragraph::new(text).block(block);
+                    f.render_widget(para, area);
+                }
                 Mode::Detail { index } => {
                     if let Some(app) = apps.get(*index) {
                         let installed = insts.iter().any(|x| x.app_id == app.id);
@@ -301,6 +321,9 @@ fn run_loop(
                         KeyCode::Enter => {
                             mode = Mode::Detail { index: selected };
                         }
+                        KeyCode::Char('p') => {
+                            mode = Mode::Preferred;
+                        }
                         KeyCode::Char('a') => {
                             if let Some(store) = &ctx.event_store {
                                 let sel: Vec<String> =
@@ -319,6 +342,30 @@ fn run_loop(
                                 plan_text: text,
                                 plan,
                             };
+                        }
+                        _ => {}
+                    },
+                    Mode::Preferred => match key.code {
+                        KeyCode::Esc => mode = Mode::Normal,
+                        KeyCode::Char('1') => {
+                            preferred = "apt".into();
+                            save_preferred(&preferred);
+                            mode = Mode::Normal;
+                        }
+                        KeyCode::Char('2') => {
+                            preferred = "flatpak".into();
+                            save_preferred(&preferred);
+                            mode = Mode::Normal;
+                        }
+                        KeyCode::Char('3') => {
+                            preferred = "appimage".into();
+                            save_preferred(&preferred);
+                            mode = Mode::Normal;
+                        }
+                        KeyCode::Char('4') => {
+                            preferred = "tarball".into();
+                            save_preferred(&preferred);
+                            mode = Mode::Normal;
                         }
                         _ => {}
                     },
@@ -407,4 +454,10 @@ fn centered_rect(
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn save_preferred(method: &str) {
+    let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
+    cfg.preferred_method = Some(method.to_string());
+    let _ = cfg.save();
 }
