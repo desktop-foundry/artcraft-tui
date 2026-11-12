@@ -309,12 +309,8 @@ fn run_loop(
                             }
                             // build desired state from selection
                             let mut cfg = artcraft_config::AppConfig::load().unwrap_or_default();
-                            let mut desired: Vec<String> = cfg.desired_apps.clone();
-                            for id in &to_install {
-                                if !desired.iter().any(|d| d == &id.0) {
-                                    desired.push(id.0.clone());
-                                }
-                            }
+                            let desired: Vec<String> =
+                                to_install.iter().map(|x| x.0.clone()).collect();
                             cfg.desired_apps = desired;
                             let _ = cfg.save();
                             let plan = ctx.reconcile_plan();

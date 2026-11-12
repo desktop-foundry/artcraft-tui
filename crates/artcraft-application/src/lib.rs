@@ -209,13 +209,14 @@ pub fn run_command(cmd: &[String], privileged: bool) -> (bool, String) {
     };
     // Actually use std::process::Command
     let program = c.remove(0);
-    let output = std::process::Command::new(&program).args(&c).output();
-    match output {
-        Ok(o) => {
-            if o.status.success() {
-                (true, String::from_utf8_lossy(&o.stdout).trim().to_string())
+    println!("  -> {} {}", program, c.join(" "));
+    let status = std::process::Command::new(&program).args(&c).status();
+    match status {
+        Ok(s) => {
+            if s.success() {
+                (true, format!("completed (exit {})", s.code().unwrap_or(0)))
             } else {
-                (false, String::from_utf8_lossy(&o.stderr).trim().to_string())
+                (false, format!("failed (exit {})", s.code().unwrap_or(-1)))
             }
         }
         Err(e) => (false, e.to_string()),
