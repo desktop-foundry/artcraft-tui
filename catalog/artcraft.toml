@@ -1,0 +1,282 @@
+# Bundled ArtCraft application catalog (offline baseline).
+# Community apps included as extensions.
+
+[[applications]]
+id = "photocraft"
+display_name = "PhotoCraft"
+description = "Open-source image editor"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/photocraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.photocraft"]
+executable_names = ["photocraft", "PhotoCraft"]
+desktop_ids = ["ai.storyteller.photocraft.desktop"]
+known_data_locations = ["~/.local/share/photocraft", "~/.config/photocraft"]
+is_community = false
+
+[[applications]]
+id = "vectorcraft"
+display_name = "VectorCraft"
+description = "Fast vector illustration"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/vectorcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.vectorcraft"]
+executable_names = ["vectorcraft", "VectorCraft"]
+desktop_ids = ["ai.storyteller.vectorcraft.desktop"]
+known_data_locations = ["~/.local/share/vectorcraft", "~/.config/vectorcraft"]
+is_community = false
+
+[[applications]]
+id = "filmcraft"
+display_name = "FilmCraft"
+description = "Professional video editing"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/filmcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.filmcraft"]
+executable_names = ["filmcraft", "FilmCraft"]
+desktop_ids = ["ai.storyteller.filmcraft.desktop"]
+known_data_locations = ["~/.local/share/filmcraft", "~/.config/filmcraft"]
+is_community = false
+
+[[applications]]
+id = "lightcraft"
+display_name = "LightCraft"
+description = "Photo library and raw developer"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/lightcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.lightcraft"]
+executable_names = ["lightcraft", "LightCraft"]
+desktop_ids = ["ai.storyteller.lightcraft.desktop"]
+known_data_locations = ["~/.local/share/lightcraft", "~/.config/lightcraft"]
+is_community = false
+
+[[applications]]
+id = "pdfcraft"
+display_name = "PdfCraft"
+description = "PDF workbench"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/pdfcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.pdfcraft"]
+executable_names = ["pdfcraft", "PdfCraft"]
+desktop_ids = ["ai.storyteller.pdfcraft.desktop"]
+known_data_locations = ["~/.local/share/pdfcraft", "~/.config/pdfcraft"]
+is_community = false
+
+[[applications]]
+id = "effectcraft"
+display_name = "EffectCraft"
+description = "Motion graphics and VFX"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/effectcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.effectcraft"]
+executable_names = ["effectcraft", "EffectCraft"]
+desktop_ids = ["ai.storyteller.effectcraft.desktop"]
+known_data_locations = ["~/.local/share/effectcraft", "~/.config/effectcraft"]
+is_community = false
+
+[[applications]]
+id = "anicraft"
+display_name = "AniCraft"
+description = "2D vector animation"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/AniCraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.anicraft"]
+executable_names = ["anicraft", "AniCraft"]
+desktop_ids = ["ai.storyteller.anicraft.desktop"]
+known_data_locations = ["~/.local/share/anicraft", "~/.config/anicraft"]
+is_community = false
+
+[[applications]]
+id = "designcraft"
+display_name = "DesignCraft"
+description = "Page layout and publishing"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/designcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.designcraft"]
+executable_names = ["designcraft", "DesignCraft"]
+desktop_ids = ["ai.storyteller.designcraft.desktop"]
+known_data_locations = ["~/.local/share/designcraft", "~/.config/designcraft"]
+is_community = false
+
+[[applications]]
+id = "figcraft"
+display_name = "FigCraft"
+description = "Interface design and prototyping"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/figcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.figcraft"]
+executable_names = ["figcraft", "FigCraft"]
+desktop_ids = ["ai.storyteller.figcraft.desktop"]
+known_data_locations = ["~/.local/share/figcraft", "~/.config/figcraft"]
+is_community = false
+
+[[applications]]
+id = "texturecraft"
+display_name = "TextureCraft"
+description = "3D texture painting"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/texturecraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.texturecraft"]
+executable_names = ["texturecraft", "TextureCraft"]
+desktop_ids = ["ai.storyteller.texturecraft.desktop"]
+known_data_locations = ["~/.local/share/texturecraft", "~/.config/texturecraft"]
+is_community = false
+
+[[applications]]
+id = "materialcraft"
+display_name = "MaterialCraft"
+description = "Procedural material design"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/materialcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.materialcraft"]
+executable_names = ["materialcraft", "MaterialCraft"]
+desktop_ids = ["ai.storyteller.materialcraft.desktop"]
+known_data_locations = ["~/.local/share/materialcraft", "~/.config/materialcraft"]
+is_community = false
+
+[[applications]]
+id = "wordcraft"
+display_name = "WordCraft"
+description = "Word processing"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/wordcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.wordcraft"]
+executable_names = ["wordcraft", "WordCraft"]
+desktop_ids = ["ai.storyteller.wordcraft.desktop"]
+known_data_locations = ["~/.local/share/wordcraft", "~/.config/wordcraft"]
+is_community = false
+
+[[applications]]
+id = "soundcraft"
+display_name = "SoundCraft"
+description = "Digital audio workstation"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/soundcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.soundcraft"]
+executable_names = ["soundcraft", "SoundCraft"]
+desktop_ids = ["ai.storyteller.soundcraft.desktop"]
+known_data_locations = ["~/.local/share/soundcraft", "~/.config/soundcraft"]
+is_community = false
+
+[[applications]]
+id = "deckcraft"
+display_name = "DeckCraft"
+description = "Presentations"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/deckcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.deckcraft"]
+executable_names = ["deckcraft", "DeckCraft"]
+desktop_ids = ["ai.storyteller.deckcraft.desktop"]
+known_data_locations = ["~/.local/share/deckcraft", "~/.config/deckcraft"]
+is_community = false
+
+[[applications]]
+id = "cadcraft"
+display_name = "CADCraft"
+description = "Computer-aided design"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/cadcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.cadcraft"]
+executable_names = ["cadcraft", "CADCraft"]
+desktop_ids = ["ai.storyteller.cadcraft.desktop"]
+known_data_locations = ["~/.local/share/cadcraft", "~/.config/cadcraft"]
+is_community = false
+
+[[applications]]
+id = "gridcraft"
+display_name = "GridCraft"
+description = "Spreadsheets"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/gridcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.gridcraft"]
+executable_names = ["gridcraft", "GridCraft"]
+desktop_ids = ["ai.storyteller.gridcraft.desktop"]
+known_data_locations = ["~/.local/share/gridcraft", "~/.config/gridcraft"]
+is_community = false
+
+[[applications]]
+id = "craft-anything"
+display_name = "Craft Anything"
+description = "Explore and build software"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/craft-anything"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["ai.storyteller.craft-anything"]
+executable_names = ["craft-anything", "CraftAnything"]
+desktop_ids = ["ai.storyteller.craft-anything.desktop"]
+known_data_locations = ["~/.local/share/craft-anything", "~/.config/craft-anything"]
+is_community = false
+
+[[applications]]
+id = "artcraft-launcher"
+display_name = "ArtCraft Launcher"
+description = "Official ArtCraft launcher"
+publisher = "ArtCraft"
+official_repository = "https://github.com/storytold/craft-launcher"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64", "riscv64"]
+known_package_ids = ["ai.storyteller.artcraft-launcher"]
+executable_names = ["artcraft-launcher", "ArtCraft Launcher"]
+desktop_ids = ["ai.storyteller.artcraft-launcher.desktop"]
+known_data_locations = ["~/.local/share/artcraft-launcher", "~/.config/artcraft-launcher"]
+is_community = false
+
+[[applications]]
+id = "solidcraft"
+display_name = "SolidCraft"
+description = "Parametric 3D CAD (community)"
+publisher = "Tangency Labs"
+official_repository = "https://github.com/tangency-labs/solidcraft"
+supported_platforms = ["linux"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["io.tangencylabs.solidcraft"]
+executable_names = ["solidcraft", "SolidCraft"]
+desktop_ids = ["io.tangencylabs.solidcraft.desktop"]
+known_data_locations = ["~/.local/share/solidcraft", "~/.config/solidcraft"]
+is_community = true
+
+[[applications]]
+id = "mailcraft"
+display_name = "MailCraft"
+description = "Mail, calendar, contacts (community)"
+publisher = "UCS Care Group"
+official_repository = "https://github.com/UCS-Care-Group/mailcraft"
+supported_platforms = ["linux", "macos", "windows"]
+supported_arches = ["x86_64", "aarch64"]
+known_package_ids = ["io.github.billsecond.mailcraft"]
+executable_names = ["mailcraft", "MailCraft"]
+desktop_ids = ["io.github.billsecond.mailcraft.desktop"]
+known_data_locations = ["~/.local/share/mailcraft", "~/.config/mailcraft"]
+is_community = true

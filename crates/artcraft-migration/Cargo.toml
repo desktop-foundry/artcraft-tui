@@ -1,0 +1,11 @@
+[package]
+name = "artcraft-migration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+artcraft-domain = { path = "../artcraft-domain" }
+artcraft-backup = { path = "../artcraft-backup" }
+artcraft-events = { path = "../artcraft-events" }
+thiserror.workspace = true

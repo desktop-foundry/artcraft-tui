@@ -1,0 +1,17 @@
+[package]
+name = "artcraft-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+artcraft-application = { path = "../artcraft-application" }
+artcraft-domain = { path = "../artcraft-domain" }
+artcraft-platform = { path = "../artcraft-platform" }
+artcraft-catalog = { path = "../artcraft-catalog" }
+artcraft-config = { path = "../artcraft-config" }
+artcraft-reconcile = { path = "../artcraft-reconcile" }
+artcraft-tui = { path = "../artcraft-tui" }
+clap.workspace = true
+serde_json.workspace = true
+tracing.workspace = true

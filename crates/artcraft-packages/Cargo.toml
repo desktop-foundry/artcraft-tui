@@ -1,0 +1,9 @@
+[package]
+name = "artcraft-packages"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+artcraft-domain = { path = "../artcraft-domain" }
+thiserror.workspace = true

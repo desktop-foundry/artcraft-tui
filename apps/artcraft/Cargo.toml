@@ -1,0 +1,18 @@
+[package]
+name = "artcraft"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "artcraft"
+path = "src/main.rs"
+
+[dependencies]
+artcraft-cli = { path = "../../crates/artcraft-cli" }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true

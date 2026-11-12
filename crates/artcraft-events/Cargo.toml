@@ -1,0 +1,11 @@
+[package]
+name = "artcraft-events"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+artcraft-domain = { path = "../artcraft-domain" }
+serde.workspace = true
+thiserror.workspace = true
+chrono = "0.4"

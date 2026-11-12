@@ -1,0 +1,16 @@
+[package]
+name = "artcraft-application"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+artcraft-domain = { path = "../artcraft-domain" }
+artcraft-platform = { path = "../artcraft-platform" }
+artcraft-catalog = { path = "../artcraft-catalog" }
+artcraft-discovery = { path = "../artcraft-discovery" }
+artcraft-reconcile = { path = "../artcraft-reconcile" }
+artcraft-config = { path = "../artcraft-config" }
+artcraft-storage = { path = "../artcraft-storage" }
+artcraft-events = { path = "../artcraft-events" }
+thiserror.workspace = true

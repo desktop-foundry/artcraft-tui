@@ -1,0 +1,12 @@
+[package]
+name = "artcraft-discovery"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+artcraft-domain = { path = "../artcraft-domain" }
+artcraft-catalog = { path = "../artcraft-catalog" }
+artcraft-platform = { path = "../artcraft-platform" }
+serde.workspace = true
+thiserror.workspace = true

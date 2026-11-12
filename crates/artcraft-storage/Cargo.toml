@@ -1,0 +1,12 @@
+[package]
+name = "artcraft-storage"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+artcraft-events = { path = "../artcraft-events" }
+rusqlite.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
